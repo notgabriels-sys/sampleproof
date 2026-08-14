@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: macos-latest
+            python-version: "3.11"
+          - os: macos-latest
+            python-version: "3.14"
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.14"
+          enable-cache: true
+
+      - name: Install locked environment
+        run: uv sync --locked
+
+      - name: Test
+        run: uv run --frozen pytest -q
+
+  windows-fail-closed:
+    name: Windows fail-closed contract / Python ${{ matrix.python-version }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.14"
+          enable-cache: true
+
+      - name: Install locked environment
+        run: uv sync --locked
+
+      - name: Verify portable surfaces and the explicit scan refusal
+        run: >-
+          uv run --frozen pytest -q
+          tests/test_config.py
+          tests/test_version.py
+          tests/test_platform.py
+
+  lint-and-build:
+    name: Lint, build, and installed-artifact smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.14"
+          enable-cache: true
+
+      - name: Install locked environment
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run --frozen ruff check .
+
+      - name: Check formatting
+        run: uv run --frozen ruff format --check .
+
+      - name: Build distributions with the locked backend
+        run: uv build --no-build-isolation
+
+      - name: Smoke the built wheel
+        run: |
+          uv run --isolated --no-project --python 3.11 --with ./dist/sampleproof-0.1.0-py3-none-any.whl sampleproof --version
+          uv run --isolated --no-project --python 3.11 --with ./dist/sampleproof-0.1.0-py3-none-any.whl python -m sampleproof --version
+
+      - name: Test the installed wheel and source distribution
+        run: |
+          mkdir -p /tmp/sampleproof-sdist
+          tar -xzf ./dist/sampleproof-0.1.0.tar.gz -C /tmp/sampleproof-sdist
+          uv run --isolated --no-project --python 3.11 --with ./dist/sampleproof-0.1.0-py3-none-any.whl --with pytest==8.4.2 pytest /tmp/sampleproof-sdist/sampleproof-0.1.0/tests -q
+          uv run --isolated --no-project --python 3.11 --with ./dist/sampleproof-0.1.0.tar.gz --with pytest==8.4.2 pytest /tmp/sampleproof-sdist/sampleproof-0.1.0/tests -q

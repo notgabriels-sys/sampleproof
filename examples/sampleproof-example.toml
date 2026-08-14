@@ -1,0 +1,20 @@
+# Example project declaration, not a universal mastering or sample-pack standard.
+schema_version = 1
+
+[delivery]
+pack_id = "form-under-load-01"
+title = "FORM UNDER LOAD 01"
+version = "1.0.0"
+license = "Commercial sample license"
+
+[pcm]
+allowed_sample_rates = [44100, 48000]
+allowed_bit_depths = [24]
+allowed_channels = [1, 2]
+
+[policy]
+max_sample_peak_dbfs = -0.1
+max_full_scale_samples = 0
+max_abs_dc_offset = 0.001
+all_zero = "fail"
+duplicate_pcm = "warn"

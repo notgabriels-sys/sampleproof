@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling==1.32.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sampleproof"
+dynamic = ["version"]
+description = "Deterministic, policy-driven QC for PCM WAV sample packs"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Gabriel García Alonso" }]
+keywords = ["audio", "quality-control", "sample-pack", "wav"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = []
+
+[project.scripts]
+sampleproof = "sampleproof.cli:main"
+
+[dependency-groups]
+dev = [
+  "hatchling==1.32.0",
+  "pytest>=8.4,<9",
+  "ruff>=0.12,<1",
+]
+
+[tool.hatch.version]
+path = "src/sampleproof/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sampleproof"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
