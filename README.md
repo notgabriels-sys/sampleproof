@@ -5,9 +5,8 @@ validates a pack against a producer-written TOML brief, measures every supported
 loading its PCM payload into memory at once, groups canonical PCM duplicates, and emits both
 human-readable and machine-readable evidence.
 
-It is a Phase Goods production utility and a narrow companion to `loudnessproof`. The two tools
-do not call or depend on one another: `sampleproof` handles sample-pack container, PCM, signal,
-and integrity facts; `loudnessproof` remains the separate loudness-focused check.
+It is a Phase Goods production utility. It handles sample-pack container, PCM, signal, and
+integrity facts without calling or depending on other production tools.
 
 Version 0.1 is intentionally conservative. A passing result means only that every discovered
 file was analyzable and met the policy declared in that brief. Every report retains the delivery
